@@ -74,4 +74,18 @@ Getting basic functionality
 ===========================
 1) Since no stdlib, missing a lot of stuff
 
-2) We can write that stuff ourselves without having to delve into OS concepts
+2) We can just write a bunch of stdlib and stdio functions ourselves
+
+==============
+Dynamic memory
+==============
+1) Having dynamic memory in the kernel is going to be useful, especially if we want dynamic linked list data structures
+2) Need to create a simple malloc and free implimentation
+3) First we need memory to allocate.  k
+    a) Since we are the kernel, we can take whatever memory we want and do whatever we want with it.
+    b) Since the kernel image starts at 0x8000, it seems reasonable to start our heap at 0x100000 (1MB) and give it (1MB) in size.
+    c) Now that we have a big hunk of memory, all we need is a function to divy it up as requested, malloc
+4) We are going to keep track of the memory as a linked list, where each node marks the start of an allocation.
+    a) We will use best fit, meaning we go through the entire list to find a free allocation that is close to the size we want
+    b) If we get something rather large, we will split it up.
+    c) When we free, we will check if we can put allocations back together

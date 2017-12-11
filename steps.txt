@@ -53,3 +53,17 @@ Building
 4) Running
     a) qemu can emulate rpi2
     b) to run on real hardware, its a bit of a hassle.  easiest to just take an sd card image of an OS that works, and replace kernel.img with ours
+
+
+=======================
+Setting up the Makefile
+=======================
+1) The kernel boots, but all of the files are scattered all over the place, and the makefile is not going to scale
+
+2) create build, src/kernel and include/kernel directories.  Put boot.S and kernel.c inside src/kernel, put makefile and linker into build
+   directory
+
+3) Change makefile to use variables.  Notably:
+    a) RASPI_MODEL: there are a few differences in the cpu between model 1 and models 2 and 3
+    b) SOURCES, OBJECTS, and INCLUDES: Create a list of all source files and all object files those source files will compile into.  Then we have rules that compile all of the source files into object files
+    c) Now we can just keep adding new source files without worrying about the make file

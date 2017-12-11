@@ -67,3 +67,11 @@ Setting up the Makefile
     a) RASPI_MODEL: there are a few differences in the cpu between model 1 and models 2 and 3
     b) SOURCES, OBJECTS, and INCLUDES: Create a list of all source files and all object files those source files will compile into.  Then we have rules that compile all of the source files into object files
     c) Now we can just keep adding new source files without worrying about the make file
+
+
+===========================
+Getting basic functionality
+===========================
+1) Since no stdlib, missing a lot of stuff
+
+2) We can write that stuff ourselves without having to delve into OS concepts

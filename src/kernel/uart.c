@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <kernel/uart.h>
+#include <common/stdlib.h>
 
 // Memory-Mapped I/O output
 void mmio_write(uint32_t reg, uint32_t data)
@@ -62,13 +63,6 @@ void uart_init()
     mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
 }
 
-static void memcpy(void * dest, void * src, int bytes) {
-    char * d = dest, * s = src;
-    while (bytes--) {
-        *d++ = *s++;
-    }
-
-}
 
 struct uart_flags read_flags(void) {
     struct uart_flags flags;

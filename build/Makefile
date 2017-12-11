@@ -14,11 +14,13 @@ CFLAGS= -mcpu=$(CPU) -fpic -ffreestanding
 CSRCFLAGS= -O2 -Wall -Wextra
 LFLAGS= -ffreestanding -O2 -nostdlib
 
-# Location of the kernel source files
+# Location of the files
 KER_SRC = ../src/kernel
 KER_HEAD = ../include
+COMMON_SRC = ../src/common
 OBJ_DIR = objects
 CSOURCES = $(wildcard $(KER_SRC)/*.c)
+CSOURCES += $(wildcard $(COMMON_SRC)/*.c)
 ASMSOURCES = $(wildcard $(KER_SRC)/*.S)
 OBJECTS = $(patsubst $(KER_SRC)/%.c, $(OBJ_DIR)/%.o, $(CSOURCES))
 OBJECTS += $(patsubst $(KER_SRC)/%.S, $(OBJ_DIR)/%.o, $(ASMSOURCES))

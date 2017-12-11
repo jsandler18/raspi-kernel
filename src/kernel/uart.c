@@ -93,9 +93,3 @@ unsigned char uart_getc()
     while ( flags.rxfe );
     return mmio_read(UART0_DR);
 }
-
-void uart_puts(const char* str)
-{
-    for (size_t i = 0; str[i] != '\0'; i ++)
-        uart_putc((unsigned char)str[i]);
-}

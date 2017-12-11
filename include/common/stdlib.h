@@ -3,4 +3,5 @@
 
 void memcpy(void * dest, void * src, int bytes);
 
+char * itoa(int i);
 #endif

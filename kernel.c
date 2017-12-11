@@ -99,17 +99,53 @@ void uart_init()
     mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
 }
 
+struct uart_flags {
+    uint8_t cts: 1;
+    uint8_t dsr: 1;
+    uint8_t dcd: 1;
+    uint8_t busy: 1;
+    uint8_t rxfe: 1;
+    uint8_t txff: 1;
+    uint8_t rxff: 1;
+    uint8_t ri: 1;
+    uint32_t padding: 24;
+};
+
+void memcpy(void * dest, void * src, int bytes) {
+    char * d = dest, * s = src;
+    while (bytes--) {
+        *d++ = *s++;
+    }
+
+}
+
+struct uart_flags read_flags(void) {
+    struct uart_flags flags;
+    int read =  mmio_read(UART0_FR);
+    memcpy(&flags, &read, 4);
+    return flags;
+}
+
 void uart_putc(unsigned char c)
 {
+    struct uart_flags flags;
     // Wait for UART to become ready to transmit.
-    while ( mmio_read(UART0_FR) & (1 << 5) ) { }
+
+    do {
+        flags = read_flags();
+    }
+    while ( flags.txff );
     mmio_write(UART0_DR, c);
 }
 
 unsigned char uart_getc()
 {
     // Wait for UART to have received something.
-    while ( mmio_read(UART0_FR) & (1 << 4) ) { }
+    struct uart_flags flags;
+    do {
+        flags = read_flags();
+    }
+    while ( flags.rxfe );
     return mmio_read(UART0_DR);
 }
 

@@ -50,3 +50,26 @@ char * itoa(int i) {
     return intbuf;
 }
 
+int atoi(char * num) {
+    int res = 0, power = 0, digit, i;
+    char * start = num;
+
+    // Find the end
+    while (*num >= '0' && *num <= '9') {
+        num++;     
+    }
+
+    num--;
+
+    while (num != start) {
+        digit = *num - '0'; 
+        for (i = 0; i < power; i++) {
+            digit *= 10;
+        }
+        res += digit;
+        power++;
+        num--;
+    }
+
+    return res;
+}

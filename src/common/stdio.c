@@ -1,6 +1,7 @@
 #include <kernel/uart.h>
 #include <common/stdio.h>
 #include <common/stdlib.h>
+#include <stdarg.h>
 
 char getc(void) {
     return uart_getc();
@@ -31,4 +32,27 @@ void gets(char * buf, int buflen) {
     }
     else
         buf[buflen-1] = '\0';
+}
+
+void printf(const char * fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    for (; *fmt != '\0'; fmt++) {
+        if (*fmt == '%') {
+            switch (*(++fmt)) {
+                case '%':
+                    putc('%');
+                    break;
+                case 'd':
+                    puts(itoa(va_arg(args, int)));
+                    break;
+                case 's':
+                    puts(va_arg(args, char *));
+                    break;
+            }
+        } else putc(*fmt);
+    }
+
+    va_end(args);
 }

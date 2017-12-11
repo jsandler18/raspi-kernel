@@ -6,6 +6,13 @@ void memcpy(void * dest, void * src, int bytes) {
     }
 }
 
+void bzero(void * dest, int bytes) {
+    char * d = dest;
+    while (bytes--) {
+        *d++ = 0;
+    }
+}
+
 char * itoa(int i) {
     static char intbuf[12];
     int j = 0, isneg = 0;

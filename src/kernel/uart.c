@@ -24,10 +24,12 @@ void delay(int32_t count)
 
 void uart_init()
 {
+    uart_control_t control;
     // Disable UART0.
-    mmio_write(UART0_CR, 0x00000000);
-    // Setup the GPIO pin 14 && 15.
+    bzero(&control, 4);
+    mmio_write(UART0_CR, control.as_int);
 
+    // Setup the GPIO pin 14 && 15.
     // Disable pull up/down for all GPIO pins & delay for 150 cycles.
     mmio_write(GPPUD, 0x00000000);
     delay(150);
@@ -60,36 +62,38 @@ void uart_init()
             (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
 
     // Enable UART0, receive & transfer part of UART.
-    mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
+    control.uart_enabled = 1;
+    control.transmit_enabled = 1;
+    control.receive_enabled = 1;
+    mmio_write(UART0_CR, control.as_int);
 }
 
 
-struct uart_flags read_flags(void) {
-    struct uart_flags flags;
-    int read =  mmio_read(UART0_FR);
-    memcpy(&flags, &read, 4);
+uart_flags_t read_flags(void) {
+    uart_flags_t flags;
+    flags.as_int = mmio_read(UART0_FR);
     return flags;
 }
 
 void uart_putc(unsigned char c)
 {
-    struct uart_flags flags;
+    uart_flags_t flags;
     // Wait for UART to become ready to transmit.
 
     do {
         flags = read_flags();
     }
-    while ( flags.txff );
+    while ( flags.transmit_queue_full );
     mmio_write(UART0_DR, c);
 }
 
 unsigned char uart_getc()
 {
     // Wait for UART to have received something.
-    struct uart_flags flags;
+    uart_flags_t flags;
     do {
         flags = read_flags();
     }
-    while ( flags.rxfe );
+    while ( flags.recieve_queue_empty );
     return mmio_read(UART0_DR);
 }

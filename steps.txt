@@ -3,5 +3,53 @@ Getting Started
 ===============
 1) Download gcc-arm-none-eabi cross compiler from developer.arm.com
 2) Download qemu-system-arm for quick testing purposes
-2) Copy code from OSdev page on raspberry pi barebones
-3) Put their build instructions in makefile
+3) Copy code from OSdev page on raspberry pi barebones
+4) Put their build instructions in makefile
+
+
+================================
+Understanding the barebones code
+================================
+1) boot.S
+    a) _start is where control is handed off from the bootloader to the kernel
+    b) It sets up the stack pointer
+    c) Sets up the BSS segment (C global veriables)
+        i)   __bss_start and __bss_end are defined in the linker script
+        ii)  label 1 stores 16 bytes of zeros at a time into the bss segment
+        iii) label 2 loops this operation until the whole BSS segment is zeroed
+    d) Jumps to the kernel_main function
+
+2) kernel.c
+    a) UART is a hardware thing in the raspi cpu. It will let us do IO
+        i)   It is "memory mapped", so all interactions go through memory.  The memory segment we will interact with starts at some hardcoded magic number
+        ii)  We interact through registers, which are fixed offsets from the base of the UART memory
+        iii) For now, we only care about the data register (UART0_DR) and the flags register (UART0+FR).  Flags tells us when we can send and recieve data, and data is where we put data to send and read data to recieve
+        iv)  flags at offset 4 tells whether or not uart has data to read, 5 tells whether uart can accpt data from a write
+
+3) linker.ld
+    a) Defines the memory layout of our kernel
+    b) ENTRY(_start) is what tells the linker our _start label in boot.S is the entry point
+    c) The script starts the memory layout at 0x8000, where the bootloader will put the kernel image
+    d) It delcares the .text section, the executable code, with .text.boot from boot.S first, then the rest of the kernel code in .text
+    e) It declares .rodata (constant data, write protected), .data (initialized data) and .bss (uninitialized data)
+    f) Each section is aligned (rounded up) to the nearest 4096, so it fits neatly inside a memory page
+
+
+========
+Building
+========
+1) Compiling boot.S
+    a) -mcpu = cortex-a7: declare the exact model of arm cpu that is being targeted.  Note that this should be "arm1176jzf-s" if compiling for raspi version 1
+    b) -fpic: generate position independent code. idk why its needed? maybe try removing?
+    c) -ffreestanding: Use standard C includes like stdint.h, but not standard library functions
+
+2) Compiling kernel.c
+    a) Similar options, nothing crazy
+
+3) Linking into an image
+    a) -T linker.ld: Specify our linker script to do the linking for our kernel
+    b) -nostdlib: again, we don't have libc here, so we don't want the compiler to assume we do
+
+4) Running
+    a) qemu can emulate rpi2
+    b) to run on real hardware, its a bit of a hassle.  easiest to just take an sd card image of an OS that works, and replace kernel.img with ours

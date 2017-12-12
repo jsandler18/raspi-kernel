@@ -3,7 +3,7 @@
 #include <kernel/uart.h>
 #include <kernel/mem.h>
 #include <kernel/atag.h>
-#include <common/stdio.h>
+#include <kernel/kerio.h>
 #include <common/stdlib.h>
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
@@ -19,6 +19,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
     mem_init((atag_t *)atags);
 
     puts("Hello, kernel World!\n");
+
     while (1) {
         gets(buf,256);
         puts(buf);

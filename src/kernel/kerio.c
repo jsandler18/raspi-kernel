@@ -1,5 +1,5 @@
 #include <kernel/uart.h>
-#include <common/stdio.h>
+#include <kernel/kerio.h>
 #include <common/stdlib.h>
 #include <stdarg.h>
 

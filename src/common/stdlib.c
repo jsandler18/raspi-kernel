@@ -1,4 +1,5 @@
 #include <common/stdlib.h>
+#include <stdint.h>
 void memcpy(void * dest, void * src, int bytes) {
     char * d = dest, * s = src;
     while (bytes--) {
@@ -13,28 +14,42 @@ void bzero(void * dest, int bytes) {
     }
 }
 
-char * itoa(int i) {
-    static char intbuf[12];
+char * itoa(int num, int base) {
+    static char intbuf[32];
     int j = 0, isneg = 0;
+    uint32_t i;
 
-    if (i == 0) {
+    if (num == 0) {
         intbuf[0] = '0';
         intbuf[1] = '\0';
         return intbuf;
     }
 
-    if (i < 0) {
+    if (base == 10 && num < 0) {
         isneg = 1;
-        i = -i;
+        num = -num;
     }
 
+    i = (uint32_t) num;
+
     while (i != 0) {
-       intbuf[j++] = '0' + (i % 10); 
-       i /= 10;
+       intbuf[j++] = (i % base) < 10 ? '0' + (i % base) : 'a' + (i % base) - 10;
+       i /= base;
     }
 
     if (isneg)
         intbuf[j++] = '-';
+
+    if (base == 16) {
+        intbuf[j++] = 'x';
+        intbuf[j++] = '0';
+    } else if(base == 8) {
+        intbuf[j++] = '0';
+    } else if(base == 2) {
+        intbuf[j++] = 'b';
+        intbuf[j++] = '0';
+    }
+        
 
     intbuf[j] = '\0';
     j--;

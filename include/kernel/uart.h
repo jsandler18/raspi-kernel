@@ -4,6 +4,14 @@
 #ifndef UART_H
 #define UART_H
 
+#ifdef MODEL_1
+#define PERIPHERAL_BASE 0x20000000
+#else
+#define PERIPHERAL_BASE 0x3F000000
+#endif
+
+#define PERIPHERAL_LENGTH 0x01000000
+
 typedef union uart_flags {
     struct {
         uint8_t clear_to_send: 1;
@@ -50,13 +58,7 @@ void delay(int32_t count);
 enum
 {
     // The GPIO registers base address.
-#ifdef MODEL_1
-    GPIO_BASE = 0x20200000, 
-#else
-    GPIO_BASE = 0x3F200000, 
-#endif
-
-
+    GPIO_BASE = PERIPHERAL_BASE + 0x200000, 
     // The offsets for reach register.
 
     // Controls actuation of pull up/down to ALL GPIO pins.
@@ -66,11 +68,7 @@ enum
     GPPUDCLK0 = (GPIO_BASE + 0x98),
 
     // The base address for UART.
-#ifdef MODEL_1
-    UART0_BASE = 0x20201000, 
-#else
-    UART0_BASE = 0x3F201000, 
-#endif
+    UART0_BASE = PERIPHERAL_BASE + 0x201000, 
 
     // The offsets for reach register for the UART.
     UART0_DR     = (UART0_BASE + 0x00),

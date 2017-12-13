@@ -33,7 +33,7 @@ __inline__ uint32_t div(uint32_t dividend, uint32_t divisor) {
     }
     return answer;
 #else
-    return division / divisor;
+    return dividend / divisor;
 #endif
 }
 
@@ -49,8 +49,9 @@ __inline__ divmod_t divmod(uint32_t dividend, uint32_t divisor) {
     return res;
 }
 
-void memcpy(void * dest, void * src, int bytes) {
-    char * d = dest, * s = src;
+void memcpy(void * dest, const void * src, int bytes) {
+    char * d = dest;
+    const char * s = src;
     while (bytes--) {
         *d++ = *s++;
     }

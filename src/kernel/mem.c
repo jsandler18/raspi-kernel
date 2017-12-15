@@ -123,7 +123,7 @@ void * kmalloc(uint32_t bytes) {
     heap_segment_t * curr, *best = NULL;
     int diff, best_diff = 0x7fffffff; // Max signed int
 
-    // Add the header to the number of bytes we need and make the size 4 byte aligned
+    // Add the header to the number of bytes we need and make the size 16 byte aligned
     bytes += sizeof(heap_segment_t);
     bytes += bytes % 16 ? 16 - (bytes % 16) : 0;
 

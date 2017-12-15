@@ -16,7 +16,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
     (void) r1;
     (void) atags;
 
-    uart_init();
     puts("Initializing Memory Module\n");
     mem_init((atag_t *)atags);
     gpu_init();

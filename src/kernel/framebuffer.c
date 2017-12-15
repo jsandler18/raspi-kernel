@@ -15,7 +15,7 @@ const pixel_t BLACK = {0x00, 0x00, 0x00};
 
 
 static int try_init_framebuffer(void) {
-    property_message_tag_t tags[4];
+    property_message_tag_t tags[5];
 
     tags[0].proptag = FB_SET_PHYSICAL_DIMENSIONS;
     tags[0].value_buffer.fb_screen_size.width = 640;
@@ -36,10 +36,10 @@ static int try_init_framebuffer(void) {
     fbinfo.width = tags[0].value_buffer.fb_screen_size.width;
     fbinfo.height = tags[0].value_buffer.fb_screen_size.height;
     fbinfo.chars_width = fbinfo.width / 8;
-    fbinfo.chars_height = fbinfo.height / 16;
+    fbinfo.chars_height = fbinfo.height / 8;
     fbinfo.chars_x = 0;
     fbinfo.chars_y = 0;
-    fbinfo.pitch = 640;//buf[19];
+    fbinfo.pitch = 640*3;//buf[19];
 
     // request a framebuffer
     tags[0].proptag = FB_ALLOCATE_BUFFER;
@@ -65,16 +65,22 @@ static void write_pixel(uint32_t x, uint32_t y, const pixel_t * pix) {
 }
 
 void gpu_putc(char c) {
-    char_bmp_t bmp = chars_bmps[(int)c];
-    uint8_t w,h, mask;
+    uint8_t w,h;
+	uint8_t mask, * bmp = font[(int)c];
+
+	if (c == '\n') {
+        fbinfo.chars_x = 0;
+        fbinfo.chars_y++;
+		return;
+	}	
     
     for(w = 0; w < 8; w++) {
-        for(h = 0; h < 16; h++) {
-           mask = 1 << (7-w);
-           if (bmp.pixels[h] & mask)
-               write_pixel(fbinfo.chars_x*8 + w, fbinfo.chars_y*16 + h, &BLACK);
+        for(h = 0; h < 8; h++) {
+			mask = 1 << (w);
+           if (bmp[h] & mask)
+               write_pixel(fbinfo.chars_x*8 + w, fbinfo.chars_y*8 + h + 100, &WHITE);
            else 
-               write_pixel(fbinfo.chars_x*8 + w, fbinfo.chars_y*16 + h, &WHITE);
+               write_pixel(fbinfo.chars_x*8 + w, fbinfo.chars_y*8 + h + 100, &BLACK);
         }
     }
     

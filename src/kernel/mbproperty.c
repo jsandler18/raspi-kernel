@@ -5,7 +5,6 @@ mail_message_t mailbox_read(void) {
     mail_status_t stat;
     mail_message_t res;
 
-    printf("%x,%x\n", MAIL0_STATUS,MAIL0_READ);
     // Make sure that the message is from the right channel
     do {
         // Make sure there is mail to recieve

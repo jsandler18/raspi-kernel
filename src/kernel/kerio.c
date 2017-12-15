@@ -1,5 +1,6 @@
 #include <kernel/uart.h>
 #include <kernel/kerio.h>
+#include <kernel/framebuffer.h>
 #include <common/stdlib.h>
 #include <stdarg.h>
 
@@ -8,7 +9,7 @@ char getc(void) {
 }
 
 void putc(char c) {
-    uart_putc(c);
+    gpu_putc(c);
 }
 
 void puts(const char * str) {

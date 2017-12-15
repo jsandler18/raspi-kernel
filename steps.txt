@@ -22,6 +22,7 @@ Understanding the barebones code
 2) kernel.c
     a) UART is a hardware thing in the raspi cpu. It will let us do IO
         i)   It is "memory mapped", so all interactions go through memory.  The memory segment we will interact with starts at some hardcoded magic number
+            1) That magic number is actually a base address for all peripherals plus a magic offset
         ii)  We interact through registers, which are fixed offsets from the base of the UART memory
         iii) For now, we only care about the data register (UART0_DR) and the flags register (UART0+FR).  Flags tells us when we can send and recieve data, and data is where we put data to send and read data to recieve
         iv)  flags at offset 4 tells whether or not uart has data to read, 5 tells whether uart can accpt data from a write
@@ -89,3 +90,29 @@ Dynamic memory
     a) We will use best fit, meaning we go through the entire list to find a free allocation that is close to the size we want
     b) If we get something rather large, we will split it up.
     c) When we free, we will check if we can put allocations back together
+
+========
+HDMI OUT
+========
+1) UART is all well and good, if you have the appopriate setup
+    a) Need a serial to usb/hdmi cable to actually use the setup as it stands right now
+2) I don't have an appropriate setup, need to enable hdmi and usb
+3) The hdmi protocol itself is handled by the gpu.  All we need to do is get access to the "framebuffer" (a region of memory the gpu will just write to the screen)
+4) Talk to gpu using an interface called "mailbox property"
+    a) mailbox starts at a certain offset from the peripheral base
+    b) offsets from there are "regisers" of the mailbox
+        i)  one for reading, one for writing, one for status
+        ii) reading/writing into these addresses sends/recieves "mail"
+    c) First need to craft a message
+        i)  Message consists of a size, a code determining whether the message is a request or a response, a list of tags, an empty end tag, and padding to make it 16 byte aligned
+        ii) tags are the individual requests we want to make
+            1) consist of an identifier, a size of its "value buffer" (the space where parameters are passed and results are put), a spot to put a result size, and the value buffer itself.
+            2) Most important for us are setting the screen size, setting the color mode, and getting a pointer to the frame buffer
+    d) Once we create a message, we can send it to the mailbox.
+        i) mail messages have 28 bits of data and 4 bits of channel.
+            1) The channel for property is 8.
+            2) The pointer to the message goes in the data, but only the high 28 bits, so we must right shift our pointer by 4.  the pointer therefore must be 16 byte aligned
+    e) Once we send the message, we can start writing raw pixels to the framebuffer it gave us
+5) If we want text, we need to render it ourselves
+    a) Someone else was kind enough to write out 8x8 bitmaps of all the ascii characters, so we will use that
+    b) We will render each ascii character pixel by pixel

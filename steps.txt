@@ -98,21 +98,30 @@ HDMI OUT
     a) Need a serial to usb/hdmi cable to actually use the setup as it stands right now
 2) I don't have an appropriate setup, need to enable hdmi and usb
 3) The hdmi protocol itself is handled by the gpu.  All we need to do is get access to the "framebuffer" (a region of memory the gpu will just write to the screen)
-4) Talk to gpu using an interface called "mailbox property"
+4) Talk to gpu using an interface called "mailbox"
     a) mailbox starts at a certain offset from the peripheral base
     b) offsets from there are "regisers" of the mailbox
         i)  one for reading, one for writing, one for status
         ii) reading/writing into these addresses sends/recieves "mail"
-    c) First need to craft a message
+5) Model 2 and 3 use "property mailbox"
+    a) First need to craft a message
         i)  Message consists of a size, a code determining whether the message is a request or a response, a list of tags, an empty end tag, and padding to make it 16 byte aligned
         ii) tags are the individual requests we want to make
             1) consist of an identifier, a size of its "value buffer" (the space where parameters are passed and results are put), a spot to put a result size, and the value buffer itself.
             2) Most important for us are setting the screen size, setting the color mode, and getting a pointer to the frame buffer
-    d) Once we create a message, we can send it to the mailbox.
+    b) Once we create a message, we can send it to the mailbox.
         i) mail messages have 28 bits of data and 4 bits of channel.
             1) The channel for property is 8.
             2) The pointer to the message goes in the data, but only the high 28 bits, so we must right shift our pointer by 4.  the pointer therefore must be 16 byte aligned
-    e) Once we send the message, we can start writing raw pixels to the framebuffer it gave us
-5) If we want text, we need to render it ourselves
+    c) Once we send the message, we can start writing raw pixels to the framebuffer it gave us
+6) Model 1 uses "framebuffer mailbox"
+    a) create a struct where we ask for a specific resolution and depth, and space for bytes per row, pointer to the buffer and a buffer size
+        i)  Again, since mailbox data is 28 bytes, pointer to struct must be 16 byte aligned
+        ii) must add 0x40000000, because GPU sees memory differently than cpu
+    b) After we send the message, it fills out our struct with info that we can use exactly the same as with model 2 and 3
+7) If we want text, we need to render it ourselves
     a) Someone else was kind enough to write out 8x8 bitmaps of all the ascii characters, so we will use that
     b) We will render each ascii character pixel by pixel
+    c) having a simple statically allocated array of pixel bitmaps won't work in practice
+        i)  For some reason, the rodata section was getting corrupt when i ran on actual hardware
+        ii) worked around by creating a function that statically allocates the data.  For some reason this fixes it?

@@ -3,6 +3,7 @@
 
 // Make _start global.
 .globl _start
+.globl model1_ok
 
 // Entry point for the kernel.
 // r15 -> should begin execution at 0x8000.
@@ -42,8 +43,7 @@ _start:
 
     // Call kernel_main
 	mov r2, #0x100
-    ldr r3, =kernel_main
-    blx r3
+    bl kernel_main
     b halt
 
 // halt

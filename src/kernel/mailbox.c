@@ -1,7 +1,7 @@
-#include <kernel/mbproperty.h>
+#include <kernel/mailbox.h>
 #include <kernel/mem.h>
 #include <common/stdlib.h>
-mail_message_t mailbox_read(void) {
+mail_message_t mailbox_read(int channel) {
     mail_status_t stat;
     mail_message_t res;
 
@@ -14,14 +14,14 @@ mail_message_t mailbox_read(void) {
 
         // Get the message
         res = *MAIL0_READ;
-    } while (res.channel != PROPERTY_CHANNEL);
+    } while (res.channel != channel);
 
     return res;
 }
 
-void mailbox_send(mail_message_t msg) {
+void mailbox_send(mail_message_t msg, int channel) {
     mail_status_t stat;
-    msg.channel = PROPERTY_CHANNEL;
+    msg.channel = channel;
     
 
     // Make sure you can send mail
@@ -92,8 +92,8 @@ int send_messages(property_message_tag_t * tags) {
     // Send the message
     mail.data = ((uint32_t)msg) >>4;
     
-    mailbox_send(mail);
-    mail = mailbox_read();
+    mailbox_send(mail, PROPERTY_CHANNEL);
+    mail = mailbox_read(PROPERTY_CHANNEL);
 
 
     if (msg->req_res_code == REQUEST) {

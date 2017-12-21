@@ -1,14 +1,15 @@
 #include <stdint.h>
 #include <kernel/peripheral.h>
 
-#ifndef MBPROPERTY_H
-#define MBPROPERTY_H
+#ifndef MAILBOX_H
+#define MAILBOX_H
 
 #define MAILBOX_BASE PERIPHERAL_BASE + MAILBOX_OFFSET
 #define MAIL0_READ (((mail_message_t *)(0x00 + MAILBOX_BASE)))
 #define MAIL0_STATUS (((mail_status_t *)(0x18 + MAILBOX_BASE)))
 #define MAIL0_WRITE (((mail_message_t *)(0x20 + MAILBOX_BASE)))
 #define PROPERTY_CHANNEL 8
+#define FRAMEBUFFER_CHANNEL 1
 
 typedef struct {
     uint8_t channel: 4;
@@ -21,8 +22,8 @@ typedef struct {
     uint8_t full:1;
 } mail_status_t;
 
-mail_message_t mailbox_read(void);
-void mailbox_send(mail_message_t msg);
+mail_message_t mailbox_read(int channel);
+void mailbox_send(mail_message_t msg, int channel);
 
 /**
  * A property message can either be a request, or a response, and a response can be successfull or an error
@@ -64,9 +65,6 @@ typedef enum {
 /**
  * For each possible tag, we create a struct corresponding to the request value buffer, and the response value buffer
  */
-typedef struct {
-    uint32_t alignment;
-} fb_allocate_req_t;
 
 typedef struct {
     void * fb_addr;
@@ -78,23 +76,16 @@ typedef struct {
     uint32_t height;
 } fb_screen_size_t;
 
-typedef struct {
-    uint32_t bits_per_pixel;
-} fb_bits_per_pixel_t;
-
-typedef struct {
-    uint32_t bytes_per_row;
-} fb_bytes_per_row_t;
 
 /*
  * The value buffer can be any one of these types
  */
 typedef union {
-    fb_allocate_req_t fb_allocate_req;
+    uint32_t fb_allocate_align;
     fb_allocate_res_t fb_allocate_res;
     fb_screen_size_t fb_screen_size;
-    fb_bits_per_pixel_t fb_bits_per_pixel;
-    fb_bytes_per_row_t fb_bytes_per_row;
+    uint32_t fb_bits_per_pixel;
+    uint32_t fb_bytes_per_row;
 } value_buffer_t;
 
 /*

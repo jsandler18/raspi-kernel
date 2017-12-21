@@ -1,13 +1,18 @@
 # Don't use normal gcc, use the arm cross compiler
-CC = ./gcc-arm-none-eabi-6-2017-q2-update/bin/arm-none-eabi-gcc
-OBJCOPY = ./gcc-arm-none-eabi-6-2017-q2-update/bin/arm-none-eabi-objcopy
+TOOLCHAIN = ./gcc-arm-none-eabi-6-2017-q2-update/bin/arm-none-eabi
+CC = $(TOOLCHAIN)-gcc
+OBJCOPY = $(TOOLCHAIN)-objcopy
+GDB = $(TOOLCHAIN)-gdb
+
 
 # Set any constants based on the raspberry pi model.  Version 1 has some differences to 2 and 3
 ifeq ($(RASPI_MODEL),1)
 	CPU = arm1176jzf-s
 	DIRECTIVES = -D MODEL_1
+	ARCHDIR = model1
 else
 	CPU = cortex-a7
+	ARCHDIR = model2
 endif
 
 CFLAGS= -mcpu=$(CPU) -fpic -ffreestanding $(DIRECTIVES) -g
@@ -20,6 +25,7 @@ KER_HEAD = ../include
 COMMON_SRC = ../src/common
 OBJ_DIR = objects
 KERSOURCES = $(wildcard $(KER_SRC)/*.c)
+KERSOURCES += $(wildcard $(KER_SRC)/$(ARCHDIR)/*.c)
 COMMONSOURCES = $(wildcard $(COMMON_SRC)/*.c)
 ASMSOURCES = $(wildcard $(KER_SRC)/*.S)
 OBJECTS = $(patsubst $(KER_SRC)/%.c, $(OBJ_DIR)/%.o, $(KERSOURCES))
@@ -29,15 +35,15 @@ HEADERS = $(wildcard $(KER_HEAD)/*.h)
 
 IMG_NAME=kernel
 
-build-hardware: build
+build: $(OBJECTS) $(HEADERS)
+	$(CC) -T linker.ld -o $(IMG_NAME).elf $(LFLAGS) $(OBJECTS)
 	$(OBJCOPY) $(IMG_NAME).elf -O binary $(IMG_NAME).img
 
-
-build: $(OBJECTS) $(HEADERS)
-	echo $(OBJECTS)
-	$(CC) -T linker.ld -o $(IMG_NAME).elf $(LFLAGS) $(OBJECTS)
-
 $(OBJ_DIR)/%.o: $(KER_SRC)/%.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -I$(KER_SRC) -I$(KER_HEAD) -c $< -o $@ $(CSRCFLAGS)
+
+$(OBJ_DIR)/%.o: $(KER_SRC)/$(ARCHDIR)/%.c
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -I$(KER_SRC) -I$(KER_HEAD) -c $< -o $@ $(CSRCFLAGS)
 
@@ -58,7 +64,7 @@ run: build
 	qemu-system-arm -m 128 -no-reboot -M raspi2 -serial stdio -kernel kernel.elf
 
 dbg:
-	./gcc-arm-none-eabi-6-2017-q2-update/bin/arm-none-eabi-gdb kernel.elf
+	$(GDB) kernel.elf
 dbgrun: build gdbinit
 	qemu-system-arm -m 128 -no-reboot -M raspi2 -serial stdio -kernel kernel.elf -S -s
 

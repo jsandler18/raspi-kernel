@@ -19,6 +19,17 @@ void gpu_putc(char c) {
     uint8_t w,h;
     uint8_t mask;
     const uint8_t * bmp = font(c);
+    uint32_t i, num_rows = fbinfo.height/CHAR_HEIGHT;
+
+    // shift everything up one row
+    if (fbinfo.chars_y >= num_rows) {
+        // Copy a whole character row into the one above it
+        for (i = 0; i < num_rows-1; i++)
+            memcpy(fbinfo.buf + fbinfo.pitch*i*CHAR_HEIGHT, fbinfo.buf + fbinfo.pitch*(i+1)*CHAR_HEIGHT, fbinfo.pitch * CHAR_HEIGHT);
+        // zero out the last row
+        bzero(fbinfo.buf + fbinfo.pitch*i*CHAR_HEIGHT,fbinfo.pitch * CHAR_HEIGHT);
+        fbinfo.chars_y--;
+    }
 
     if (c == '\n') {
         fbinfo.chars_x = 0;
@@ -30,9 +41,9 @@ void gpu_putc(char c) {
         for(h = 0; h < CHAR_HEIGHT; h++) {
             mask = 1 << (w);
             if (bmp[h] & mask)
-                write_pixel(fbinfo.chars_x*CHAR_WIDTH + w, fbinfo.chars_y*CHAR_HEIGHT + h + 100, &WHITE);
+                write_pixel(fbinfo.chars_x*CHAR_WIDTH + w, fbinfo.chars_y*CHAR_HEIGHT + h, &WHITE);
             else
-                write_pixel(fbinfo.chars_x*CHAR_WIDTH + w, fbinfo.chars_y*CHAR_HEIGHT + h + 100, &BLACK);
+                write_pixel(fbinfo.chars_x*CHAR_WIDTH + w, fbinfo.chars_y*CHAR_HEIGHT + h, &BLACK);
         }
     }
 

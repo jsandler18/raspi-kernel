@@ -41,8 +41,10 @@ _start:
     blo 1b
 
     // Call kernel_main
+	mov r2, #0x100
     ldr r3, =kernel_main
     blx r3
+    b halt
 
 // halt
 halt:

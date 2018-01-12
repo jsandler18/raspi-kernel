@@ -125,3 +125,63 @@ HDMI OUT
     c) having a simple statically allocated array of pixel bitmaps won't work in practice
         i)  For some reason, the rodata section was getting corrupt when i ran on actual hardware
         ii) worked around by creating a function that statically allocates the data.  For some reason this fixes it?
+
+==========
+Interrupts
+==========
+1) We want to do a usb keyboard, this requires hardware interrupts
+2) There are 3 kinds of hardware interrupts
+    a) arm specific (aka basic)
+    b) arm and gpu shared
+    c) fast interrupt
+        i) This is handled separately, so we are not gonna worry about it
+3) Hardware interrupts fall under the more broad category of processor exceptions
+    a) Each type of exception needs to have its own specific handler
+        i) irq handler important right now, swi handler important later
+    b) When an exception occurs, the processor loads a certain offset from address 0 into the pc, depending on what type of exception, and executes the instruction there
+        i)  0 is reset, 4 is undefined instruction, 8 is software interrupt, c is prefetch abort handler, 10 is data abort handler, 14 is reserved, 18 is irq, 1c is fiq
+        ii) To write handlers, all we need to do is define c functions to handle each exception, and add compiler attribute so that the compiler knows its an exception handler and generates appropriate prolog and epilog code
+    c) Tricky part is to get the instructions to 0
+        i)  we can't just load the addresses into the program counter, because the assembler makes all of these references relative
+            1) If we move these to 0, they will still be loading an address relative to them, but the address they want is no longer there
+        ii) We need to copy along with it the absolute location of all the addresses of the handlers
+            1) But wait!! the absolute addresses all think that the code starts at address 0, but it starts at 0x8000!, so we must add that 0x8000 in ourselves
+4) Once the exception instructions are copied, we still need to do some setup for hardware interrrupts specifically
+    a) when an irq comes in, the processor changes to irq mode, from whatever mode it was in
+    b) irq mode has its own set of shadow registers, including the stack pointer
+    c) we must initialize this stack pointer so that our stack is not overwriting anything important when we go to irq mode
+5) Now that the exception handlers are all set up, we need to write the irq handler itself
+    a) Need to check which interrupts are pending, can do this through irq peripheral
+    b) interrupts peripheral offset is 0xb000, has following structure
+        i) 24 bytes of pending flags.  each hardware interrupt flips a certain flag
+            1)  The first 4 bytes are basic interrupts
+            2) The next 8 are gpu specific
+                a) Everything we want is going to be in the gpu shared range
+        ii) 4 bytes of fiq control
+        iii) 24 bytes of enable flags
+            1)   set to 1 to enable the interrupt
+            2)  first 8 bytes are for gpu
+            3) next 4 are for arm specific
+        iv) 24 bytes of disable flags
+            1)   set to 1 to disable (dont have to set 0 to enable flag)
+            2)  first 8 for gpu, next 4 for arm
+     c) use this to find which interrupt is waiting and call the appropriate handler
+6) need to enable interrupts
+    a) use cps instruction
+    b) ie modifier means interrupts enabled, id means disabled
+    c) i argument means enable irqs, as opposed to f for fiqs
+7) Need something to interrupt us!
+    a) usb is hard, so we will use the system timer
+        i) System timer always runs in the background, and we can set it to interrupt us after a certain time
+    b) timer peripheral offset is 0x3000
+        i) control register, for checking and clearing interrupt status of timers
+        ii) low and high timer registers
+            a) timer is 64 bit, need two registers to hold it
+            b) timer is 1Mhz, so low register increases once ever microsecond
+        iii) 4 compare registers
+            a) low timer is compared to all 4 compare registers every tick.
+            b) if match, then interrupt
+    c) First we define an interrupt handler and register it with the irq handler
+    d) Then we set the timer to go off, and wait
+
+

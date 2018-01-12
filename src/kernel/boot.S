@@ -1,9 +1,9 @@
+.equ KERNEL_STACK_SIZE, 4096
 // To keep this in the first portion of the binary.
 .section ".text.boot"
 
 // Make _start global.
 .globl _start
-.globl model1_ok
 
 // Entry point for the kernel.
 // r15 -> should begin execution at 0x8000.
@@ -20,8 +20,10 @@ _start:
     cmp r1, #0
     bne halt
 #endif
-    // Setup the stack.
-    mov sp, #0x8000
+    // Setup the stack.  Stack will be 32 KB above kernel image
+    ldr sp, =__end
+	mov r4, #(KERNEL_STACK_SIZE)
+	add sp, sp, r4
 
     // Clear out bss.
     ldr r4, =__bss_start

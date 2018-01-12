@@ -45,15 +45,19 @@ void mem_init(atag_t * atags) {
     mem_size = get_mem_size(atags);
     num_pages = mem_size / PAGE_SIZE;
 
-    // Allocate space for all those pages' metadata.  Start this block just after the kernel image is finished
+    // Allocate space for all those pages' metadata.  Start this block just after the stacks
     page_array_len = sizeof(page_t) * num_pages;
-    all_pages_array = (page_t *)&__end;
+    all_pages_array = (page_t *)((uint32_t)&__end + KERNEL_STACK_SIZE +IRQ_STACK_SIZE);
     bzero(all_pages_array, page_array_len);
     INITIALIZE_LIST(free_pages);
+    
+    // Find where the page metadata ends and round up to the nearest page
+    page_array_end = (uint32_t)all_pages_array + page_array_len;
+    page_array_end += page_array_end % PAGE_SIZE ? PAGE_SIZE - (page_array_end % PAGE_SIZE) : 0;
 
     // Iterate over all pages and mark them with the appropriate flags
-    // Start with kernel pages
-    kernel_pages = ((uint32_t)&__end) / PAGE_SIZE;
+    // Start with kernel pages, stacks, and page metadata
+    kernel_pages = (page_array_end) / PAGE_SIZE;
     for (i = 0; i < kernel_pages; i++) {
         all_pages_array[i].vaddr_mapped = i * PAGE_SIZE;    // Identity map the kernel pages
         all_pages_array[i].flags.allocated = 1;
@@ -73,7 +77,6 @@ void mem_init(atag_t * atags) {
 
 
     // Initialize the heap
-    page_array_end = (uint32_t)&__end + page_array_len;
     heap_init(page_array_end);
 
 }

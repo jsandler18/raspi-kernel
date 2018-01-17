@@ -7,8 +7,16 @@
 #include <kernel/gpu.h>
 #include <kernel/interrupts.h>
 #include <kernel/timer.h>
+#include <kernel/process.h>
 #include <common/stdlib.h>
 
+void test(void) {
+    int i = 0;
+    while (1) {
+        printf("test %d\n", i++);
+        udelay(1000000);
+    }
+}
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
@@ -27,10 +35,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
     printf("INITIALIZING TIMER...");
     timer_init();
     printf("DONE\n");
+    printf("INITIALIZING SCHEDULER...");
+    process_init();
+    printf("DONE\n");
 
     puts("Hello, kernel World!\n");
 
-    timer_set(3000000);
+    create_kernel_thread(test, "TEST", 4);
+
     while (1) {
         printf("main %d\n", i++);
         udelay(1000000);

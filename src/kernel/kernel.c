@@ -12,7 +12,7 @@
 
 void test(void) {
     int i = 0;
-    while (1) {
+    while (i < 10) {
         printf("test %d\n", i++);
         udelay(1000000);
     }

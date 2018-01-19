@@ -59,6 +59,27 @@ void process_init(void) {
 
 }
 
+static void reap(void) {
+    DISABLE_INTERRUPTS();
+    process_control_block_t * new_thread, * old_thread;
+
+    // If nothing on the run queue, there is nothing to do now. just loop
+    while (size_pcb_list(&run_queue) == 0);
+
+    // Get the next thread to run.  For now we are using round-robin
+    new_thread = pop_pcb_list(&run_queue);
+    old_thread = current_process;
+    current_process = new_thread;
+
+    // Free the resources used by the old process.  Technically, we are using dangling pointers here, but since interrupts are disabled and we only have one core, it
+    // should still be fine
+    free_page(old_thread->stack_page);
+    kfree(old_thread);
+
+    // Context Switch
+    switch_to_thread(old_thread, new_thread);
+}
+
 void create_kernel_thread(kthread_function_f thread_func, char * name, int name_len) {
     process_control_block_t * pcb;
     proc_saved_state_t * new_proc_state;
@@ -77,6 +98,7 @@ void create_kernel_thread(kthread_function_f thread_func, char * name, int name_
     // Set up the stack that will be restored during a context switch
     bzero(new_proc_state, sizeof(proc_saved_state_t));
     new_proc_state->lr = (uint32_t)thread_func;     // lr is used as return address in switch_to_thread
+    new_proc_state->sp = (uint32_t)reap;            // When the thread function returns, this reaper routine will clean it up
     new_proc_state->cpsr = 0x13 | (8 << 1);         // Sets the thread up to run in supervisor mode with irqs only
 
     // add the thread to the lists

@@ -30,7 +30,6 @@ static heap_segment_t * heap_segment_list_head;
 extern uint8_t __end;
 static uint32_t num_pages;
 
-DEFINE_LIST(page);
 IMPLEMENT_LIST(page);
 
 static page_t * all_pages_array;
@@ -45,9 +44,9 @@ void mem_init(atag_t * atags) {
     mem_size = get_mem_size(atags);
     num_pages = mem_size / PAGE_SIZE;
 
-    // Allocate space for all those pages' metadata.  Start this block just after the stacks
+    // Allocate space for all those pages' metadata.  Start this block just after the stack
     page_array_len = sizeof(page_t) * num_pages;
-    all_pages_array = (page_t *)((uint32_t)&__end + KERNEL_STACK_SIZE +IRQ_STACK_SIZE);
+    all_pages_array = (page_t *)((uint32_t)&__end + KERNEL_STACK_SIZE);
     bzero(all_pages_array, page_array_len);
     INITIALIZE_LIST(free_pages);
     

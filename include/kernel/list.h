@@ -30,6 +30,9 @@
  *
  * struct nodeType * next_nodeType_list(struct nodeType * node)
  *      gets the next node in the list, null if none left
+ *
+ * void remove_nodeType(nodeType_list_t * list, struct nodeType * node)
+ *      removes the given element from the list
  */
 #include <stddef.h>
 #include <stdint.h>
@@ -38,6 +41,7 @@
 #define LIST_H
 
 #define DEFINE_LIST(nodeType) \
+struct nodeType;            \
 typedef struct nodeType##list { \
     struct nodeType * head; \
     struct nodeType * tail; \
@@ -46,7 +50,8 @@ typedef struct nodeType##list { \
 
 #define DEFINE_LINK(nodeType) \
 struct nodeType * next##nodeType;\
-struct nodeType * prev##nodeType;
+struct nodeType * prev##nodeType;\
+nodeType##_list_t * container;
 
 #define INITIALIZE_LIST(list) \
     list.head = list.tail = (void *)0;\
@@ -62,6 +67,7 @@ void append_##nodeType##_list(nodeType##_list_t * list, struct nodeType * node) 
     if (list->head == NULL) {                                                \
         list->head = node;                                                   \
     }                                                                        \
+    node->container = list;                                                  \
 }                                                                            \
                                                                              \
 void push_##nodeType##_list(nodeType##_list_t * list, struct nodeType * node) {    \
@@ -72,6 +78,7 @@ void push_##nodeType##_list(nodeType##_list_t * list, struct nodeType * node) { 
     if (list->tail == NULL) {                                                \
         list->tail = node;                                                   \
     }                                                                        \
+    node->container = list;                                                  \
 }                                                                            \
                                                                              \
 struct nodeType * peek_##nodeType##_list(nodeType##_list_t * list) {         \
@@ -86,6 +93,7 @@ struct nodeType * pop_##nodeType##_list(nodeType##_list_t * list) {          \
     if (list->head == NULL) {                                                \
         list->tail = NULL;                                                  \
     }                                                                        \
+    res->container = NULL;                                                  \
     return res;                                                              \
 }                                                                            \
                                                                              \
@@ -96,5 +104,22 @@ uint32_t size_##nodeType##_list(nodeType##_list_t * list) {                  \
 struct nodeType * next_##nodeType##_list(struct nodeType * node) {           \
     return node->next##nodeType;                                             \
 }                                                                            \
+                                                                             \
+void remove_##nodeType (nodeType##_list_t * list, struct nodeType * node) {  \
+    if (node->container == list) {                                           \
+        if (node->prev##nodeType == NULL) {                                 \
+            list->head = node->next##nodeType;                               \
+        } else {                                                             \
+            node->prev##nodeType = node->next##nodeType;                     \
+        }                                                                    \
+        if (node->next##nodeType == NULL) {                                  \
+            list->tail = node->prev##nodeType;                               \
+        } else {                                                            \
+            node->next##nodeType = node->prev##nodeType;                    \
+        }                                                                   \
+    }                                                                       \
+    node->container = NULL;                                                 \
+}                                                                           \
+
 
 #endif

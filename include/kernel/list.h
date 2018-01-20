@@ -36,7 +36,7 @@
  */
 #include <stddef.h>
 #include <stdint.h>
-
+#include <kernel/spinlock.h>
 #ifndef LIST_H
 #define LIST_H
 
@@ -45,6 +45,7 @@ struct nodeType;            \
 typedef struct nodeType##list { \
     struct nodeType * head; \
     struct nodeType * tail; \
+    spin_lock_t lock;\
     uint32_t size;\
 } nodeType##_list_t;
 
@@ -55,10 +56,13 @@ nodeType##_list_t * container;
 
 #define INITIALIZE_LIST(list) \
     list.head = list.tail = (void *)0;\
-    list.size = 0;
+    list.size = 0;\
+    spin_init(&list.lock);
+
 
 #define IMPLEMENT_LIST(nodeType) \
 void append_##nodeType##_list(nodeType##_list_t * list, struct nodeType * node) {  \
+    spin_lock(&list->lock);                                                 \
     list->tail->next##nodeType = node;                                       \
     node->prev##nodeType = list->tail;                                       \
     list->tail = node;                                                       \
@@ -68,9 +72,11 @@ void append_##nodeType##_list(nodeType##_list_t * list, struct nodeType * node) 
         list->head = node;                                                   \
     }                                                                        \
     node->container = list;                                                  \
+    spin_unlock(&list->lock);                                                 \
 }                                                                            \
                                                                              \
 void push_##nodeType##_list(nodeType##_list_t * list, struct nodeType * node) {    \
+    spin_lock(&list->lock);                                                 \
     node->next##nodeType = list->head;                                       \
     node->prev##nodeType = NULL;                                             \
     list->head = node;                                                       \
@@ -79,6 +85,7 @@ void push_##nodeType##_list(nodeType##_list_t * list, struct nodeType * node) { 
         list->tail = node;                                                   \
     }                                                                        \
     node->container = list;                                                  \
+    spin_unlock(&list->lock);                                                 \
 }                                                                            \
                                                                              \
 struct nodeType * peek_##nodeType##_list(nodeType##_list_t * list) {         \
@@ -86,6 +93,7 @@ struct nodeType * peek_##nodeType##_list(nodeType##_list_t * list) {         \
 }                                                                            \
                                                                              \
 struct nodeType * pop_##nodeType##_list(nodeType##_list_t * list) {          \
+    spin_lock(&list->lock);                                                 \
     struct nodeType * res = list->head;                                      \
     list->head = list->head->next##nodeType;                                 \
     list->head->prev##nodeType = NULL;                                                 \
@@ -94,6 +102,7 @@ struct nodeType * pop_##nodeType##_list(nodeType##_list_t * list) {          \
         list->tail = NULL;                                                  \
     }                                                                        \
     res->container = NULL;                                                  \
+    spin_unlock(&list->lock);                                                 \
     return res;                                                              \
 }                                                                            \
                                                                              \
@@ -106,6 +115,7 @@ struct nodeType * next_##nodeType##_list(struct nodeType * node) {           \
 }                                                                            \
                                                                              \
 void remove_##nodeType (nodeType##_list_t * list, struct nodeType * node) {  \
+    spin_lock(&list->lock);                                                 \
     if (node->container == list) {                                           \
         if (node->prev##nodeType == NULL) {                                 \
             list->head = node->next##nodeType;                               \
@@ -119,6 +129,7 @@ void remove_##nodeType (nodeType##_list_t * list, struct nodeType * node) {  \
         }                                                                   \
     }                                                                       \
     node->container = NULL;                                                 \
+    spin_unlock(&list->lock);                                                 \
 }                                                                           \
 
 

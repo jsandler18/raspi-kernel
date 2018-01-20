@@ -25,6 +25,8 @@ typedef struct {
     uint32_t lr;
 } proc_saved_state_t;
 
+DEFINE_LIST(pcb);
+
 typedef struct pcb {
     proc_saved_state_t * saved_state; // Pointer to where on the stack this process's state is saved. Becomes invalid once the process is running
     void * stack_page;                // The stack for this proces.  The stack starts at the end of this page
@@ -34,7 +36,6 @@ typedef struct pcb {
 } process_control_block_t;
 
 
-DEFINE_LIST(pcb);
 
 void process_init(void);
 

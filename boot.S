@@ -11,6 +11,14 @@
 // r2 -> 0x00000100 - start of ATAGS
 // preserve these registers as argument for kernel_main
 _start:
+    // This set of instructions sets 3 of the 4 cores to go to halt.
+    // Model 1 only has 1 cpu and does not have this instruction, so don't include it if building for model 1
+#ifndef MODEL_1
+    mrc p15, #0, r1, c0, c0, #5
+    and r1, r1, #3
+    cmp r1, #0
+    bne halt
+#endif
     // Setup the stack.
     mov sp, #0x8000
 

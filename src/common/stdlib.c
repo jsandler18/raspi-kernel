@@ -58,9 +58,13 @@ void memcpy(void * dest, const void * src, int bytes) {
 }
 
 void bzero(void * dest, int bytes) {
-    char * d = dest;
+    memset(dest, 0, bytes);
+}
+
+void memset(void * dest, uint8_t c, int bytes) {
+    uint8_t * d = dest;
     while (bytes--) {
-        *d++ = 0;
+        *d++ = c;
     }
 }
 

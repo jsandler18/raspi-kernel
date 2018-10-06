@@ -27,6 +27,7 @@ void schedule(void) {
     // If nothing on the run queue, the current process should just continue
     if (size_pcb_list(&run_queue) == 0) {
         timer_set(10000);
+        ENABLE_INTERRUPTS();
         return;
     }
 

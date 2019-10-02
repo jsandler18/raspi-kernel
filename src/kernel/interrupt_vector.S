@@ -32,7 +32,7 @@ move_exception_vector:
     blx     lr
 
 irq_handler_asm_wrapper:
-    sub     lr, lr, #4      // Adjsut return address
+    sub     lr, lr, #4      // Adjust return address
     srsdb   sp!, #0x13      // Save irq lr and irq spsp to supervisor stack, and save the resulting stack pointer as the current stack pointer
     cpsid   if, #0x13       // Switch to supervisor mode with interrupts disabled
     push    {r0-r3, r12, lr}// Save the caller save registers
